@@ -101,4 +101,30 @@ public class BookController {
         saveData(currentBookData); // Save the updated list to the file
         return ResponseEntity.ok("Deleted book at index: " + index); // Return success message
     }
+
+
+
+
+
+    /**
+     * Handles PUT requests to update an existing book by its index.
+     *
+     * @param index The index of the book to be updated.
+     * @param updatedBook The updated book details provided in the request body.
+     * @return ResponseEntity containing the updated BookDataModel and HTTP status.
+     */
+    @PutMapping("/{index}")
+    public ResponseEntity<BookDataModel> updateBook(@PathVariable int index, @RequestBody BookDataModel updatedBook) {
+        List<BookDataModel> currentBookData = loadData(); // Load current book data
+
+        // Check if the index is out of bounds
+        if (index < 0 || index >= currentBookData.size()) {
+            return ResponseEntity.badRequest().body(null); // Return error message if index is invalid
+        }
+
+        // Update the existing book details with the new data
+        currentBookData.set(index, updatedBook); // Replace the book at the specified index
+        saveData(currentBookData); // Save the updated list to the file
+        return ResponseEntity.ok(updatedBook); // Return the updated book with HTTP status 200 OK
+    }
 }
