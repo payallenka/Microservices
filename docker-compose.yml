@@ -1,0 +1,39 @@
+version: '3.8'
+
+services:
+  eureka-server:  # Use consistent naming
+    build:
+      context: ./server
+    ports:
+      - "8761:8761"
+    networks:
+      - microservices-network
+
+  client:
+    build:
+      context: ./client
+    ports:
+      - "8080:8080"
+    environment:
+      - EUREKA_CLIENT_SERVICE_URL=http://eureka-server:8761/eureka/  # Corrected variable name
+    depends_on:
+      - eureka-server
+    networks:
+      - microservices-network
+
+  frontend:
+    build:
+      context: ./frontend
+    ports:
+      - "8081:8081"
+    environment:
+      - EUREKA_CLIENT_SERVICE_URL=http://eureka-server:8761/eureka/  # Corrected variable name
+    depends_on:
+      - eureka-server
+      - client
+    networks:
+      - microservices-network
+
+networks:
+  microservices-network:
+    driver: bridge

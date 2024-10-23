@@ -26,7 +26,7 @@ public class Index extends VerticalLayout { // Extends VerticalLayout for stacki
 
     private Grid<BookDataModel> grid = new Grid<>(); // Grid to display book data
     private final RestTemplate restTemplate; // REST client for API calls
-    private final String url = "http://localhost:8080"; // Base URL for API requests
+    private final String url = "http://client:8080"; // Base URL for API requests
 
     @Autowired // Dependency injection for RestTemplate
     public Index(RestTemplate restTemplate) {
