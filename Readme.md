@@ -11,6 +11,7 @@ The application consists of multiple microservices that communicate with each ot
 - Frontend: A user interface built with Vaadin for a seamless user experience.
 
 ## Installation
+[Ensure you have the maven, openjdk:17 installed, to run this smoothly]
 
 1. Clone the Repository:
 
