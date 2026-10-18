@@ -1,0 +1,26 @@
+spring:
+  application:
+    name: web-ui
+
+server:
+  port: 8090
+
+bookstore:
+  # Eureka service name of the gateway, resolved by the @LoadBalanced RestClient.
+  api-url: ${BOOKSTORE_API_URL:http://api-gateway}
+
+eureka:
+  client:
+    service-url:
+      defaultZone: ${EUREKA_URL:http://localhost:8761/eureka/}
+  instance:
+    prefer-ip-address: true
+
+management:
+  endpoints:
+    web:
+      exposure:
+        include: health,info
+
+vaadin:
+  launch-browser: false

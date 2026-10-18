@@ -1,39 +1,109 @@
-version: '3.8'
+name: bookstore
+
+x-service-defaults: &service-defaults
+  restart: unless-stopped
+  networks: [bookstore]
+
+x-healthcheck: &healthcheck
+  interval: 10s
+  timeout: 5s
+  retries: 12
+  start_period: 30s
 
 services:
-  eureka-server:  # Use consistent naming
-    build:
-      context: ./server
-    ports:
-      - "8761:8761"
-    networks:
-      - microservices-network
-
-  client:
-    build:
-      context: ./client
-    ports:
-      - "8080:8080"
+  postgres:
+    <<: *service-defaults
+    image: postgres:16-alpine
     environment:
-      - EUREKA_CLIENT_SERVICE_URL=http://eureka-server:8761/eureka/  # Corrected variable name
-    depends_on:
-      - eureka-server
-    networks:
-      - microservices-network
+      POSTGRES_USER: ${DB_USERNAME:-bookstore}
+      POSTGRES_PASSWORD: ${DB_PASSWORD:-bookstore}
+      POSTGRES_DB: bookdb
+    volumes:
+      - postgres-data:/var/lib/postgresql/data
+      # Creates reviewdb alongside bookdb: one database per service.
+      - ./infra/postgres/init:/docker-entrypoint-initdb.d:ro
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U $${POSTGRES_USER} -d bookdb"]
+      interval: 5s
+      timeout: 5s
+      retries: 10
 
-  frontend:
+  discovery-server:
+    <<: *service-defaults
     build:
-      context: ./frontend
-    ports:
-      - "8081:8081"
+      context: .
+      args: { SERVICE: discovery-server }
+    ports: ["8761:8761"]
+    healthcheck:
+      <<: *healthcheck
+      test: ["CMD", "curl", "-fs", "http://localhost:8761/actuator/health"]
+
+  book-service:
+    <<: *service-defaults
+    build:
+      context: .
+      args: { SERVICE: book-service }
+    ports: ["8081:8081"]
     environment:
-      - EUREKA_CLIENT_SERVICE_URL=http://eureka-server:8761/eureka/  # Corrected variable name
+      EUREKA_URL: http://discovery-server:8761/eureka/
+      DB_URL: jdbc:postgresql://postgres:5432/bookdb
+      DB_USERNAME: ${DB_USERNAME:-bookstore}
+      DB_PASSWORD: ${DB_PASSWORD:-bookstore}
     depends_on:
-      - eureka-server
-      - client
-    networks:
-      - microservices-network
+      postgres: { condition: service_healthy }
+      discovery-server: { condition: service_healthy }
+    healthcheck:
+      <<: *healthcheck
+      test: ["CMD", "curl", "-fs", "http://localhost:8081/actuator/health"]
+
+  review-service:
+    <<: *service-defaults
+    build:
+      context: .
+      args: { SERVICE: review-service }
+    ports: ["8082:8082"]
+    environment:
+      EUREKA_URL: http://discovery-server:8761/eureka/
+      DB_URL: jdbc:postgresql://postgres:5432/reviewdb
+      DB_USERNAME: ${DB_USERNAME:-bookstore}
+      DB_PASSWORD: ${DB_PASSWORD:-bookstore}
+    depends_on:
+      postgres: { condition: service_healthy }
+      discovery-server: { condition: service_healthy }
+    healthcheck:
+      <<: *healthcheck
+      test: ["CMD", "curl", "-fs", "http://localhost:8082/actuator/health"]
+
+  api-gateway:
+    <<: *service-defaults
+    build:
+      context: .
+      args: { SERVICE: api-gateway }
+    ports: ["8080:8080"]
+    environment:
+      EUREKA_URL: http://discovery-server:8761/eureka/
+    depends_on:
+      discovery-server: { condition: service_healthy }
+    healthcheck:
+      <<: *healthcheck
+      test: ["CMD", "curl", "-fs", "http://localhost:8080/actuator/health"]
+
+  web-ui:
+    <<: *service-defaults
+    build:
+      context: .
+      args: { SERVICE: web-ui, MAVEN_PROFILES: production }
+    ports: ["8090:8090"]
+    environment:
+      EUREKA_URL: http://discovery-server:8761/eureka/
+    depends_on:
+      api-gateway: { condition: service_healthy }
+    healthcheck:
+      <<: *healthcheck
+      test: ["CMD", "curl", "-fs", "http://localhost:8090/actuator/health"]
+
+volumes:
+  postgres-data:
 
 networks:
-  microservices-network:
-    driver: bridge
+  bookstore:
