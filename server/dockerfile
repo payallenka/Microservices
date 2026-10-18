@@ -1,5 +1,0 @@
-FROM openjdk:17
-WORKDIR /app
-COPY ./target/Server-0.0.1-SNAPSHOT.jar /app
-EXPOSE 8761
-CMD ["java", "-jar", "Server-0.0.1-SNAPSHOT.jar"]

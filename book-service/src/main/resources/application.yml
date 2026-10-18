@@ -1,0 +1,36 @@
+spring:
+  application:
+    name: book-service
+  datasource:
+    url: ${DB_URL:jdbc:postgresql://localhost:5432/bookdb}
+    username: ${DB_USERNAME:bookstore}
+    password: ${DB_PASSWORD:bookstore}
+  jpa:
+    open-in-view: false
+    hibernate:
+      # Schema is owned by Flyway migrations; Hibernate only checks that the entities match it.
+      ddl-auto: validate
+  data:
+    web:
+      pageable:
+        max-page-size: 100
+
+server:
+  port: 8081
+
+eureka:
+  client:
+    service-url:
+      defaultZone: ${EUREKA_URL:http://localhost:8761/eureka/}
+  instance:
+    prefer-ip-address: true
+
+management:
+  endpoints:
+    web:
+      exposure:
+        include: health,info
+
+springdoc:
+  swagger-ui:
+    path: /swagger-ui.html

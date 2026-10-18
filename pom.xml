@@ -1,0 +1,21 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+	xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 https://maven.apache.org/xsd/maven-4.0.0.xsd">
+	<modelVersion>4.0.0</modelVersion>
+
+	<!-- Aggregator only: lets `./mvnw verify` build and test every service from the repo root.
+	     Each service keeps spring-boot-starter-parent as its own parent so it can be built standalone (e.g. in Docker). -->
+	<groupId>com.bookstore</groupId>
+	<artifactId>bookstore-microservices</artifactId>
+	<version>1.0.0</version>
+	<packaging>pom</packaging>
+	<name>bookstore-microservices</name>
+
+	<modules>
+		<module>discovery-server</module>
+		<module>api-gateway</module>
+		<module>book-service</module>
+		<module>review-service</module>
+		<module>web-ui</module>
+	</modules>
+</project>
